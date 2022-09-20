@@ -1,0 +1,13 @@
+
+<%= form_for @changeset, Routes.task_path(@conn, :create), fn f -> %>
+
+
+<div class="form-group">
+    <%= text_input f, :subject, placeholder: "Task", class: "form-control" %>
+    <%= error_tag f, :subject %>   
+    <div class="right">
+      <%= link "Show All Task", to: Routes.task_path(@conn, :show) %>
+      
+    </div>
+</div>
+<%= submit "Save Task", class: "btn btn-primary" %> <%end%> 

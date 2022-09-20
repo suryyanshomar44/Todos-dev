@@ -1,0 +1,18 @@
+<h4>All of the Task</h4>
+
+<ul class="collection">
+
+    <%= for task <- @tasks do %>
+        <%= if @conn.assigns.user.id == task.user_id do %>
+            <li class="collection-item">
+            
+                <%= task.subject %>
+                    <div class="right">
+                        <%= link "Done", to: Routes.task_path(@conn, :delete, task), method: :delete %>
+                    </div>
+            
+            </li>
+        <% end %>
+    <% end %>
+
+</ul>
