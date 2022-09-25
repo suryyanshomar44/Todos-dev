@@ -9,5 +9,9 @@
       <%= link "Show All Task", to: Routes.task_path(@conn, :show) %>
       
     </div>
+    
 </div>
 <%= submit "Save Task", class: "btn btn-primary" %> <%end%> 
+<div class="right">
+      <%= link "Calendar", to: Routes.live_path(@conn, TodosWeb.CalendarLive), class: "btn btn-primary" %>
+</div>

@@ -1,18 +1,26 @@
-<h4>All of the Task</h4>
+<h4>All of the Tasks</h4>
 
 <ul class="collection">
 
     <%= for task <- @tasks do %>
-        <%= if @conn.assigns.user.id == task.user_id do %>
+        <%= if @conn.assigns.user.id == task.user_id && task.done == 0 do %>
             <li class="collection-item">
-            
                 <%= task.subject %>
                     <div class="right">
-                        <%= link "Done", to: Routes.task_path(@conn, :delete, task), method: :delete %>
+                        <%= link "Complete", to: Routes.task_path(@conn, :update, task), method: :delete %>
                     </div>
-            
             </li>
         <% end %>
+
+        <%= if @conn.assigns.user.id == task.user_id && task.done == 1 do %>
+            <li class="collection-item">
+                <%= task.subject %>
+                    <div class="right">
+                        <h6>Completed</h6>
+                    </div>
+            </li>
+        <% end %>
+
     <% end %>
 
 </ul>

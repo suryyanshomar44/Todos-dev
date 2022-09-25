@@ -12,16 +12,14 @@ defmodule TodosWeb.TaskController do
     end
     def check(conn, changeset) do
 
-        tasks = get_today_task()
+        tasks = Enum.count(check_today_pending_task()) + Enum.count(check_today_done_task())
         cond do
-            Enum.count(tasks)<3 ->
+            tasks<3 ->
                 case Repo.insert(changeset) do
                     {:ok, _task} ->
                         redirect(conn, to: Routes.task_path(conn, :show))
                         
                     {:error, changeset} ->
-                        # IO.puts("++++++++++++++++++++++++")
-                        # IO.inspect(changeset)
                        render conn, "index.html", changeset: changeset
                 end
             true  -> 
@@ -32,80 +30,106 @@ defmodule TodosWeb.TaskController do
         end
     end
 
-    def create(conn, params) do
-        IO.puts("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-        #IO.inspect(params)
-        %{"task" => task} = params
-        # changeset  = Task.changeset(%Task{}, task)
-        
+    def calendar_status(color) do
+        current_time = NaiveDateTime.utc_now()
+        day = current_time.day
+        month = current_time.month
+        year = current_time.year
+        changeset = Calendar.changeset(%Calendar{}, %{day: day, month: month, year: year, status: color})
+
        
+        
+        case get_date() do
+            nil ->
+                Repo.insert(changeset)
+            day ->
+                old_data = Repo.get(Calendar, day.id)
+                changeset = Calendar.changeset(old_data, %{status: color})
+                Repo.update(changeset)
+                
+        end
+    end
+
+    def create(conn, params) do
+        
+        %{"task" => task} = params
+
+        done_tasks = check_today_done_task()
+        cond do
+            Enum.count(done_tasks)>0 ->
+                calendar_status("Yellow")
+
+            Enum.count(done_tasks)==0 ->
+                calendar_status("Red")
+        end
         changeset = conn.assigns.user
             |> build_assoc(:task)
             |> Task.changeset(task)
         check(conn, changeset)
         
-        current_time = NaiveDateTime.utc_now()
-        day = current_time.day
-        month = current_time.month
-        year = current_time.year
-        changeset = Calendar.changeset(%Calendar{}, %{day: day, month: month, year: year, status: "Red"})
-        # case Repo.get(changeset) do
-        #     {:ok, _task} ->
-        #         Repo.update(Calendar, changeset)
-        #     {:error, changeset} ->
-        #         Repo.insert(Calendar, changeset)
-        # end 
-        Repo.insert(Calendar, changeset)
-
-
-        # today_task = get_today_task();
-        # case Enum.count(today_task) do
-        #     1 -> 
-            
-        #     2 -> 
-
-        #     3 -> 
-
-        
     end
     def get_today_task() do
+        date_query()
+        |> Repo.all
+    end
+
+    def date_query() do
         current_time = NaiveDateTime.utc_now()
-        #IO.puts("++++++++++++++++++++++++")
-        #IO.inspect(current_time)
+        
         past_time = 
         current_time
         |> NaiveDateTime.add(-1 * (( current_time.hour * 60 * 60 ) + ( current_time.minute*60 ) + current_time.second) ,  :second)
        
-        IO.puts("++++++++++++++++++++++++")
-        IO.inspect(past_time)
-        
         Task
         |> select([t], %{
             subject: t.subject,
         })
         |> where([e], e.inserted_at >= ^past_time)
         |> where([e], e.inserted_at < ^current_time)
+    end
+
+    def check_today_pending_task() do
+        date_query()
+        |> where([e], e.done == 0)
         |> Repo.all
     end
 
+    def check_today_done_task() do
+        date_query()
+        |> where([e], e.done == 1)
+        |> Repo.all
+    end
 
-
-    def delete(conn, %{"id" => task_id}) do
-
-        
-        Repo.get!(Task, task_id) |> Repo.delete!
+     def find_date(day, month, year) do
+        Repo.get_by(Calendar, [day: day, month: month, year: year])
+    end
+    
+    def get_date() do
         current_time = NaiveDateTime.utc_now()
         day = current_time.day
         month = current_time.month
         year = current_time.year
-        changeset = Calendar.changeset(%Calendar{}, %{day: day, month: month, year: year, status: "Green"})
-        # case Repo.get(Calendar) do
-        #     {:ok, _task} ->
-        #         Repo.update(Calendar, changeset)
-        #     {:error, changeset} ->
-        #         Repo.insert(Calendar, changeset)
-        # end 
-        Repo.insert(Calendar, changeset)
+        
+        Repo.get_by(Calendar, [day: day, month: month, year: year])
+    end
+
+    def update(conn, %{"id" => task_id}) do
+
+        
+        not_done_task = check_today_pending_task()
+        length = Enum.count(not_done_task)
+
+        cond do
+            length > 0 ->
+                calendar_status("Yellow")
+            true ->
+                calendar_status("Green")
+        end
+
+        completed_task = Repo.get(Task, task_id);
+        newChangeset = Task.changeset(completed_task, %{done: 1})
+        Repo.update(newChangeset)
+
         conn
         |> put_flash(:info, "Task Deleted")
         redirect(conn, to: Routes.task_path(conn, :index))
@@ -115,10 +139,6 @@ defmodule TodosWeb.TaskController do
         
         tasks = Repo.all(Task)
         %TodosWeb.User{id: user_id} = conn.assigns.user
-        # IO.puts("++++++++++++++++++++++++")
-        # IO.inspect(user_id)
-        # tasks = Task |> where(id: user_id) |> Repo.all()
-        #IO.inspect(tasks)
         render conn, "show.html", tasks: tasks
     end
 

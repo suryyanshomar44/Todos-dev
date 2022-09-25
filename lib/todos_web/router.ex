@@ -21,7 +21,7 @@ defmodule TodosWeb.Router do
     get "/", TaskController, :index
     post "/topics", TaskController, :create
     get "/topics/alltopics", TaskController, :show
-    delete "/topics/remove/:id", TaskController, :delete
+    delete "/topics/remove/:id", TaskController, :update
     live "/calendar", CalendarLive
   end
 
