@@ -120,9 +120,9 @@ defmodule TodosWeb.TaskController do
         length = Enum.count(not_done_task)
 
         cond do
-            length > 0 ->
+            length > 1 ->
                 calendar_status("Yellow")
-            true ->
+            length == 1 ->
                 calendar_status("Green")
         end
 
@@ -136,8 +136,18 @@ defmodule TodosWeb.TaskController do
     end
 
     def show(conn, _params) do
+
+        current_time = NaiveDateTime.utc_now()
         
-        tasks = Repo.all(Task)
+        past_time = 
+        current_time
+        |> NaiveDateTime.add(-1 * (( current_time.hour * 60 * 60 ) + ( current_time.minute*60 ) + current_time.second) ,  :second)
+       
+        tasks = Task
+        |> where([e], e.inserted_at >= ^past_time)
+        |> where([e], e.inserted_at < ^current_time)
+        |> Repo.all
+        IO.inspect(tasks)
         %TodosWeb.User{id: user_id} = conn.assigns.user
         render conn, "show.html", tasks: tasks
     end

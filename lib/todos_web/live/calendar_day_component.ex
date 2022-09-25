@@ -27,8 +27,6 @@ defmodule TodosWeb.CalendarDayComponent do
 
 
   defp day_class(assigns) do
-    IO.puts("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-    IO.inspect(assigns)
     cond  do
       TodosWeb.TaskController.find_date(assigns.day.day, assigns.day.month, assigns.day.year) == nil ->
         "text-xs p-2 text-gray-600 border border-gray-200 bg-white hover:bg-blue-100 cursor-pointer"
