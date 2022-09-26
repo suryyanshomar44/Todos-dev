@@ -10,6 +10,10 @@ defmodule TodosWeb.Endpoint do
     signing_salt: "f1cSVM/S"
   ]
 
+  socket "/socket", TodosWeb.UserSocket,
+    websocket: [timeout: 45_000],
+    longpoll: false
+
   socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]
 
   # Serve at "/" the static files from "priv/static" directory.
