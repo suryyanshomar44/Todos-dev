@@ -130,7 +130,6 @@ defmodule TodosWeb.TaskController do
         |> where([e], e.inserted_at >= ^past_time)
         |> where([e], e.inserted_at < ^current_time)
         |> Repo.all
-        IO.inspect(tasks)
         %TodosWeb.User{id: user_id} = conn.assigns.user
         render conn, "show.html", tasks: tasks
     end
